@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>專業動態 FSM 邏輯電路 EDA 工具</title>
+    <style>
+        :root { --bg-color: #f4f7f6; --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --border: #d1d5da; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: #333; max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        .header-bar { background-color: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header-title { font-size: 20px; font-weight: bold; }
+        .student-info { display: flex; gap: 15px; }
+        .student-info label { font-size: 15px; margin: 0; }
+        .student-info input { padding: 4px 8px; border-radius: 4px; border: none; font-size: 15px; font-weight: bold; width: 120px; }
+        
+        .section { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid var(--border); }
+        .section-title { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--accent); padding-bottom: 8px; display: inline-block; }
+        
+        .flex-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;}
+        .flex-col { flex: 1; min-width: 250px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e1e4e8;}
+        
+        label { cursor: pointer; font-size: 15px; margin-right: 15px; display: inline-block; margin-bottom: 8px;}
+        select { padding: 5px 10px; font-size: 15px; border-radius: 4px; font-weight: bold; border: 1px solid #34495e;}
+        
+        table.state-table { width: 100%; border-collapse: collapse; text-align: center; background: white; font-size: 15px;}
+        table.state-table th, table.state-table td { border: 1px solid var(--border); padding: 10px; }
+        table.state-table th { background-color: #e8f0fe; color: var(--primary); font-weight: bold; }
+        input.cell-input { width: 60px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 15px; }
+        
+        .btn-generate { background-color: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: background 0.3s; margin-top: 15px; }
+        .btn-generate:hover { background-color: #219653; }
+        
+        .kmap-wrapper { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .kmap-card { min-width: 180px; background: #fff; border: 2px solid var(--secondary); border-radius: 8px; padding: 15px; text-align: center;}
+        .kmap-card h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 16px;}
+        table.kmap-table { margin: 0 auto; border-collapse: collapse; }
+        table.kmap-table th, table.kmap-table td { border: 1px solid #bdc3c7; min-width: 30px; height: 30px; text-align: center; font-size: 13px; padding: 4px;}
+        table.kmap-table th { background-color: #f1f2f6; font-size: 12px; }
+        .eq-text { margin-top: 10px; font-size: 14px; font-weight: bold; color: #c0392b; background: #fadbd8; padding: 5px; border-radius: 4px;}
+        
+        .svg-container { width: 100%; overflow-x: auto; background: #ffffff; border: 2px solid #bdc3c7; border-radius: 8px;}
+        svg { display: block; margin: 0 auto; }
+
+        /* 說明書專屬樣式 */
+        .manual-list { font-size: 16px; line-height: 1.8; color: #34495e; padding-left: 25px; margin-top: 10px; }
+        .manual-list li { margin-bottom: 8px; }
+        .manual-highlight { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <div class="header-title">⚡ 專業動態版 FSM 邏輯電路 EDA 工具</div>
+        <div class="student-info">
+            <label>姓名: <input type="text" value="黃熙諾" readonly></label>
+            <label>學號: <input type="text" value="1140524" readonly></label>
+        </div>
+    </div>
+
+    <div class="section" style="background-color: #eaf2f8; border-color: #accce4;">
+        <div class="section-title">📖 使用者說明書 (User Manual)</div>
+        <p style="font-size: 16px; line-height: 1.6; color: #2c3e50; margin-top: 0;">
+            歡迎使用本 <strong>動態 FSM 邏輯電路 EDA 工具</strong>！本系統可自動為您處理繁瑣的數位邏輯推導過程。請依照以下 3 個步驟進行操作：
+        </p>
+        <ol class="manual-list">
+            <li><strong>參數設定：</strong> 請先於「1. 系統與變數設定」區塊，選擇您要使用的 <span class="manual-highlight">模型 (Mealy/Moore)</span>、<span class="manual-highlight">正反器種類 (JK/T/D)</span> 以及 <span class="manual-highlight">總狀態數量 (2~7個)</span>。您也可自訂輸入與輸出變數名稱。</li>
+            <li><strong>填寫狀態表：</strong> 系統會根據您的設定即時生成「2. 狀態表」。請依照您的設計規格，在對應欄位中填入「下一個狀態 (Next State)」與「輸出值 (Output)」。(提示：下一個狀態請直接輸入代號，如 A, B, C...)</li>
+            <li><strong>執行運算與檢視：</strong> 確認輸入無誤後，點擊 <strong>「🚀 執行運算」</strong>。系統將自動在下方為您生成：
+                <ul style="margin-top: 5px; color: #555;">
+                    <li><strong>化簡方程式：</strong> 透過 Quine-McCluskey 演算法推導出的最簡 SOP 方程式與真值表。</li>
+                    <li><strong>狀態轉換圖：</strong> 具備自動避讓演算法的無重疊狀態機視覺化圖形。</li>
+                    <li><strong>邏輯電路圖：</strong> 專業級 RTL 自動佈線全覽圖（支援直角佈線與零穿透演算）。</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. 系統與變數設定</div>
+        <div class="flex-row">
+            <div class="flex-col">
+                <div style="font-weight:bold; margin-bottom:10px;">Model Type</div>
+                <label><input type="radio" name="modelType" value="mealy" checked onchange="renderTable()"> Mealy Model</label>
+                <label><input type="radio" name="modelType" value="moore" onchange="renderTable()"> Moore Model</label>
+            </div>
+            <div class="flex-col">
+                <div style="font-weight:bold; margin-bottom:10px;">Flip-Flop & States</div>
+                <select id="ffType" style="margin-right: 15px;">
+                    <option value="jk">JK Flip-Flop</option>
+                    <option value="t">T Flip-Flop</option>
+                    <option value="d">D Flip-Flop</option>
+                </select>
+                <select id="stateCount" onchange="renderTable()">
+                    <option value="2">2 States</option>
+                    <option value="3">3 States</option>
+                    <option value="4" selected>4 States</option>
+                    <option value="5">5 States</option>
+                    <option value="6">6 States</option>
+                    <option value="7">7 States</option>
+                </select>
+            </div>
+            <div class="flex-col">
+                <div style="font-weight:bold; margin-bottom:10px;">Variables</div>
+                <label>Input: <input type="text" id="inputVar" value="X" style="width: 40px; text-align: center; font-weight:bold;" oninput="renderTable()"></label>
+                <label>Output: <input type="text" id="outputVar" value="Z" style="width: 40px; text-align: center; font-weight:bold;"></label>
+            </div>
+        </div>
+
+        <div class="section-title" style="margin-top: 10px;">2. 狀態表 (Dynamic State Table)</div>
+        <table class="state-table" id="dynamicTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <button class="btn-generate" onclick="calculate()">🚀 執行運算：產生卡諾圖、狀態圖與電路佈線</button>
+    </div>
+
+    <div id="result-section" style="display: none;">
+        <div class="section">
+            <div class="section-title">3. 真值表對應與化簡方程式 (K-Maps & Equations)</div>
+            <div class="kmap-wrapper" id="kmap-container"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">4. 動態狀態轉換圖 (State Diagram)</div>
+            <div class="svg-container" style="border-color: #34495e;">
+                <svg id="stateDiagramSvg" viewBox="0 0 1000 500" width="100%" height="100%"></svg>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">5. RTL 邏輯電路佈線圖 (Circuit Diagram)</div>
+            <div class="svg-container">
+                <svg id="circuitSvg" viewBox="0 0 1650 1200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const stateNamesMap = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+    
+    function renderTable() {
+        const modelType = document.querySelector('input[name="modelType"]:checked').value;
+        const stateCount = parseInt(document.getElementById('stateCount').value);
+        const inputVar = document.getElementById('inputVar').value || 'X';
+        const numFF = Math.ceil(Math.log2(stateCount));
+        
+        const thead = document.getElementById('tableHead');
+        const tbody = document.getElementById('tableBody');
+        
+        let headHTML = `
+            <tr>
+                <th rowspan="2">Present State</th>
+                <th rowspan="2">Assign (${numFF===1?'Q0':numFF===2?'Q1 Q0':'Q2 Q1 Q0'})</th>
+                <th colspan="2">Next State</th>
+                <th colspan="${modelType === 'mealy' ? 2 : 1}">Output</th>
+            </tr>
+            <tr>
+                <th>${inputVar}=0</th><th>${inputVar}=1</th>
+                ${modelType === 'mealy' ? `<th>${inputVar}=0</th><th>${inputVar}=1</th>` : `<th>State Output</th>`}
+            </tr>
+        `;
+        thead.innerHTML = headHTML;
+
+        let bodyHTML = '';
+        for(let i = 0; i < stateCount; i++) {
+            let stateName = stateNamesMap[i];
+            let assign = i.toString(2).padStart(numFF, '0');
+            // 特意設計一個會有對角線交叉的預設測資
+            let next0 = stateCount === 4 ? ['A', 'D', 'A', 'B'][i] : stateNamesMap[(i+1) % stateCount];
+            let next1 = stateCount === 4 ? ['B', 'C', 'D', 'C'][i] : (stateNamesMap[(i+2) % stateCount] || stateNamesMap[0]);
+            
+            bodyHTML += `<tr>
+                <td style="font-weight: bold; font-size: 16px;">${stateName}</td>
+                <td style="color: #7f8c8d; font-weight: bold;">${assign}</td>
+                <td><input type="text" class="cell-input" id="ns_${i}_0" value="${next0}"></td>
+                <td><input type="text" class="cell-input" id="ns_${i}_1" value="${next1}"></td>
+                ${modelType === 'mealy' ? 
+                    `<td><input type="text" class="cell-input" id="out_${i}_0" value="0"></td>
+                     <td><input type="text" class="cell-input" id="out_${i}_1" value="${i%2}"></td>` :
+                    `<td><input type="text" class="cell-input" id="out_${i}" value="${i%2}"></td>`
+                }
+            </tr>`;
+        }
+        tbody.innerHTML = bodyHTML;
+    }
+
+    window.onload = renderTable;
+
+    function stateToIndex(val) {
+        let idx = stateNamesMap.indexOf(String(val).trim().toUpperCase());
+        return idx !== -1 ? idx : -1; 
+    }
+
+    function getJ(q, q_next) { if(q_next===-1) return 'X'; return q === 0 ? q_next : 'X'; }
+    function getK(q, q_next) { if(q_next===-1) return 'X'; return q === 1 ? (q_next === 1 ? 0 : 1) : 'X'; }
+    function getT(q, q_next) { if(q_next===-1) return 'X'; return q === q_next ? 0 : 1; }
+    function getD(q, q_next) { return q_next === -1 ? 'X' : q_next; }
+
+    function solveBooleanQM(ones, dcs, varNames) {
+        let numVars = varNames.length;
+        if (ones.length === 0) return "0";
+        if (ones.length + dcs.length === (1 << numVars)) return "1";
+
+        let minterms = [...ones, ...dcs].map(m => m.toString(2).padStart(numVars, '0'));
+        let primes = new Set();
+        let currentGroup = minterms;
+
+        while(currentGroup.length > 0) {
+            let nextGroup = new Set();
+            let currentUsed = new Set();
+            for(let i=0; i<currentGroup.length; i++) {
+                for(let j=i+1; j<currentGroup.length; j++) {
+                    let a = currentGroup[i], b = currentGroup[j];
+                    let diff = 0, res = "";
+                    for(let k=0; k<numVars; k++) {
+                        if(a[k] !== b[k]) { diff++; res += "-"; }
+                        else { res += a[k]; }
+                    }
+                    if(diff === 1) {
+                        nextGroup.add(res);
+                        currentUsed.add(a); currentUsed.add(b);
+                    }
+                }
+            }
+            for(let term of currentGroup) if(!currentUsed.has(term)) primes.add(term);
+            currentGroup = Array.from(nextGroup);
+        }
+
+        let primeArr = Array.from(primes);
+        let uncovered = new Set(ones.map(m => m.toString(2).padStart(numVars, '0')));
+        let selectedPrimes = [];
+
+        function matches(prime, minterm) {
+            for(let i=0; i<prime.length; i++) if(prime[i] !== '-' && prime[i] !== minterm[i]) return false;
+            return true;
+        }
+
+        for(let u of uncovered) {
+            let covers = primeArr.filter(p => matches(p, u));
+            if(covers.length === 1 && !selectedPrimes.includes(covers[0])) selectedPrimes.push(covers[0]);
+        }
+        for(let p of selectedPrimes) {
+            for(let u of Array.from(uncovered)) if(matches(p, u)) uncovered.delete(u);
+        }
+        
+        while(uncovered.size > 0) {
+            let bestPrime = null, maxCover = 0;
+            for(let p of primeArr) {
+                if(selectedPrimes.includes(p)) continue;
+                let coverCount = 0;
+                for(let u of Array.from(uncovered)) if(matches(p, u)) coverCount++;
+                if(coverCount > maxCover) { maxCover = coverCount; bestPrime = p; }
+            }
+            selectedPrimes.push(bestPrime);
+            for(let u of Array.from(uncovered)) if(matches(bestPrime, u)) uncovered.delete(u);
+        }
+
+        let eq = selectedPrimes.map(p => {
+            let term = "";
+            for(let i=0; i<numVars; i++) {
+                if(p[i] === '1') term += varNames[i];
+                else if(p[i] === '0') term += varNames[i] + "'";
+            }
+            return term === "" ? "1" : term;
+        }).join(" + ");
+
+        return eq;
+    }
+
+    function generateTruthTableCard(title, vals, varNames) {
+        let numVars = varNames.length;
+        let html = `<div class="kmap-card"><h4>${title}</h4><table class="kmap-table"><tr>`;
+        varNames.forEach(v => html += `<th>${v}</th>`);
+        html += `<th>Val</th></tr>`;
+        
+        let limit = vals.length > 8 ? 8 : vals.length;
+        for(let i=0; i<limit; i++) {
+            let bin = i.toString(2).padStart(numVars, '0');
+            html += `<tr>`;
+            for(let j=0; j<numVars; j++) html += `<td>${bin[j]}</td>`;
+            html += `<td style="font-weight:bold; color:${vals[i]==='X'?'#e74c3c':'#2980b9'}">${vals[i]}</td></tr>`;
+        }
+        if(vals.length > 8) html += `<tr><td colspan="${numVars+1}">... (${vals.length} rows)</td></tr>`;
+        
+        let ones = [], dcs = [];
+        for(let i=0; i<vals.length; i++) {
+            if(vals[i] === 1 || vals[i] === '1') ones.push(i);
+            if(vals[i] === 'X' || vals[i] === 'x') dcs.push(i);
+        }
+        let eq = solveBooleanQM(ones, dcs, varNames);
+        
+        html += `</table><div class="eq-text">${title} = ${eq}</div></div>`;
+        return { html, eq };
+    }
+
+    function parseTermForSVG(term, allVarNames) {
+        let factors = [];
+        allVarNames.forEach(v => {
+            if (term.includes(v+"'")) factors.push(v+"'");
+            else if (term.includes(v)) factors.push(v);
+        });
+        return factors;
+    }
+
+    // --- 【向量極致對齊版】狀態轉換圖 ---
+    function drawDynamicStateDiagram(stateCount, numFF, nextQ_0, nextQ_1, out_0, out_1, inputName, isMoore) {
+        let svg = `<defs>
+            <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e1e4e8" stroke-width="1"/>
+            </pattern>
+            <marker id="arrow-blue" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#2980b9"/>
+            </marker>
+            <marker id="arrow-red" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#c0392b"/>
+            </marker>
+            <marker id="arrow" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#34495e"/>
+            </marker>
+        </defs>`;
+        
+        svg += `<rect width="100%" height="100%" fill="url(#grid)" />`;
+        
+        let cx = 500, cy = 250;
+        let r = stateCount > 4 ? 180 : 150;
+        let nodeR = 35; 
+        let padR = nodeR + 3; // 路徑終止點距離圓心 38px (包含外框厚度)，讓箭頭尖端剛好碰到外緣
+
+        const nodes = {};
+        for(let i=0; i<stateCount; i++) {
+            let angle = (stateCount===4) ? (Math.PI/4 + i * Math.PI/2) : (-Math.PI/2 + (2 * Math.PI * i) / stateCount);
+            nodes[stateNamesMap[i]] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+        }
+
+        let edgesMap = {};
+        for(let i=0; i<stateCount; i++) {
+            let ps = stateNamesMap[i];
+            let n0 = nextQ_0[i], n1 = nextQ_1[i];
+            
+            const addEdge = (destIdx, xVal, zVal) => {
+                if(destIdx === -1) return;
+                let dest = stateNamesMap[destIdx];
+                let key = `${ps}-${dest}`;
+                if(!edgesMap[key]) edgesMap[key] = [];
+                let label = isMoore ? `${xVal}` : `${xVal}/${zVal}`;
+                edgesMap[key].push(label);
+            };
+            addEdge(n0, 0, out_0[i]);
+            addEdge(n1, 1, out_1[i]);
+        }
+
+        let pathsHTML = ""; 
+        for(let key in edgesMap) {
+            let [src, dest] = key.split('-');
+            let s = nodes[src], d = nodes[dest];
+            let labelText = edgesMap[key].join(', ');
+            let textWidth = labelText.length * 6.5 + 10; 
+            let color = labelText.includes('0') && labelText.includes('1') ? "#34495e" : (labelText.includes('0') ? "#2980b9" : "#c0392b");
+            let marker = labelText.includes('0') && labelText.includes('1') ? "url(#arrow)" : (labelText.includes('0') ? "url(#arrow-blue)" : "url(#arrow-red)");
+
+            if(src === dest) {
+                // 智慧自迴圈
+                let angle = Math.atan2(s.y - cy, s.x - cx);
+                let cx1 = s.x + 80 * Math.cos(angle - 0.5);
+                let cy1 = s.y + 80 * Math.sin(angle - 0.5);
+                let cx2 = s.x + 80 * Math.cos(angle + 0.5);
+                let cy2 = s.y + 80 * Math.sin(angle + 0.5);
+                
+                // 數學向量擷斷 (Truncation)
+                let dsx = cx1 - s.x, dsy = cy1 - s.y;
+                let lents = Math.sqrt(dsx*dsx + dsy*dsy);
+                let sx = s.x + padR * (dsx/lents);
+                let sy = s.y + padR * (dsy/lents);
+
+                let dex = s.x - cx2, dey = s.y - cy2;
+                let lente = Math.sqrt(dex*dex + dey*dey);
+                let ex = s.x - padR * (dex/lente);
+                let ey = s.y - padR * (dey/lente);
+
+                pathsHTML += `<path d="M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${ey}" fill="none" stroke="${color}" stroke-width="1.5" marker-end="${marker}"/>`;
+                
+                let tx = s.x + 65 * Math.cos(angle), ty = s.y + 65 * Math.sin(angle);
+                pathsHTML += `<rect x="${tx - textWidth/2}" y="${ty - 9}" width="${textWidth}" height="18" fill="#f8f9fa" stroke="#bdc3c7" stroke-width="1" rx="4"/>`;
+                pathsHTML += `<text x="${tx}" y="${ty + 4}" fill="${color}" font-size="12" font-weight="bold" text-anchor="middle">${labelText}</text>`;
+            } else {
+                let sIdx = stateNamesMap.indexOf(src);
+                let dIdx = stateNamesMap.indexOf(dest);
+                let isDiagonal = Math.abs(sIdx - dIdx) > 1 && Math.abs(sIdx - dIdx) < stateCount - 1;
+
+                let offset = edgesMap[`${dest}-${src}`] ? 35 : (isDiagonal ? 15 : 0);
+                if(stateCount === 2) offset = edgesMap[`${dest}-${src}`] ? 30 : 0; // 2狀態修正
+
+                let dx = d.x - s.x, dy = d.y - s.y;
+                let len = Math.sqrt(dx*dx + dy*dy);
+                let nx = -dy/len, ny = dx/len; 
+                let ctrlX = (s.x + d.x)/2 + nx * offset;
+                let ctrlY = (s.y + d.y)/2 + ny * offset;
+
+                // 向量擷斷：線段只畫到圓形邊緣，讓箭頭不會刺穿節點
+                let dsx = ctrlX - s.x, dsy = ctrlY - s.y;
+                let lents = Math.sqrt(dsx*dsx + dsy*dsy);
+                let sx = s.x + padR * (dsx/lents);
+                let sy = s.y + padR * (dsy/lents);
+
+                let dex = d.x - ctrlX, dey = d.y - ctrlY;
+                let lente = Math.sqrt(dex*dex + dey*dey);
+                let ex = d.x - padR * (dex/lente);
+                let ey = d.y - padR * (dey/lente);
+
+                pathsHTML += `<path d="M ${sx} ${sy} Q ${ctrlX} ${ctrlY} ${ex} ${ey}" fill="none" stroke="${color}" stroke-width="1.5" marker-end="${marker}"/>`;
+                
+                let t = isDiagonal ? 0.25 : 0.5;
+                let mt = 1 - t;
+                let tx = mt*mt*s.x + 2*mt*t*ctrlX + t*t*d.x;
+                let ty = mt*mt*s.y + 2*mt*t*ctrlY + t*t*d.y;
+
+                pathsHTML += `<rect x="${tx - textWidth/2}" y="${ty - 9}" width="${textWidth}" height="18" fill="#f8f9fa" stroke="#bdc3c7" stroke-width="1" rx="4"/>`;
+                pathsHTML += `<text x="${tx}" y="${ty + 4}" fill="${color}" font-size="12" font-weight="bold" text-anchor="middle">${labelText}</text>`;
+            }
+        }
+
+        // 獨立軌道 START 箭頭 (由左上 225 度角斜插進入 A 節點，保證不跟任何線重疊)
+        let startNode = nodes['A'];
+        let angleStart = Math.PI * 1.25; 
+        let s_ex = startNode.x + padR * Math.cos(angleStart);
+        let s_ey = startNode.y + padR * Math.sin(angleStart);
+        let s_sx = startNode.x + 75 * Math.cos(angleStart);
+        let s_sy = startNode.y + 75 * Math.sin(angleStart);
+
+        svg += `<path d="M ${s_sx} ${s_sy} L ${s_ex} ${s_ey}" fill="none" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrow)"/>`;
+        // 將 START 文字稍微往外推
+        svg += `<text x="${s_sx - 25}" y="${s_sy - 5}" font-size="14" font-weight="bold" text-anchor="middle" fill="#2c3e50">START</text>`;
+
+        // 節點置於最上層
+        let nodesHTML = "";
+        for(let key in nodes) {
+            let n = nodes[key];
+            let assign = stateNamesMap.indexOf(key).toString(2).padStart(numFF, '0');
+            nodesHTML += `<circle cx="${n.x}" cy="${n.y}" r="${nodeR}" fill="#e8f0fe" stroke="#1e3a8a" stroke-width="2"/>`;
+            if(isMoore) {
+                let mooreOut = out_0[stateNamesMap.indexOf(key)];
+                nodesHTML += `<text x="${n.x}" y="${n.y - 4}" text-anchor="middle" font-weight="bold" font-size="16" fill="#1e3a8a">${key}</text>`;
+                nodesHTML += `<text x="${n.x}" y="${n.y + 14}" text-anchor="middle" font-size="12" fill="#333">${assign} / ${mooreOut}</text>`;
+            } else {
+                nodesHTML += `<text x="${n.x}" y="${n.y - 2}" text-anchor="middle" font-weight="bold" font-size="16" fill="#1e3a8a">${key}</text>`;
+                nodesHTML += `<text x="${n.x}" y="${n.y + 16}" text-anchor="middle" font-size="12" fill="#555">${assign}</text>`;
+            }
+        }
+
+        svg += pathsHTML + nodesHTML; 
+        return svg;
+    }
+
+    // --- 完美電路圖 ---
+    function drawDynamicCircuit(equations, ffType, inputName, outputName, numFF, allVarNames) {
+        let svg = `<defs>
+            <g id="and-gate"><path d="M 0,0 L 35,0 A 30,30 0 0,1 35,60 L 0,60 Z" fill="#fff" stroke="#2c3e50" stroke-width="2.5"/><text x="10" y="35" font-size="16" font-weight="bold" fill="#2c3e50">AND</text></g>
+            <g id="or-gate"><path d="M 0,0 Q 20,30 0,60 Q 40,60 60,30 Q 40,0 0,0 Z" fill="#fff" stroke="#2c3e50" stroke-width="2.5"/><text x="18" y="35" font-size="16" font-weight="bold" fill="#2c3e50">OR</text></g>
+            <g id="not-gate"><path d="M 0,5 L 30,25 L 0,45 Z" fill="#fff" stroke="#2c3e50" stroke-width="2"/><circle cx="36" cy="25" r="6" fill="#fff" stroke="#2c3e50" stroke-width="2"/></g>
+        </defs>`;
+
+        let busX = {};
+        let currentX = 60;
+        allVarNames.forEach(v => {
+            busX[v] = currentX; currentX += 50; 
+            busX[v+"'"] = currentX; currentX += 50;
+        });
+
+        for (let key in busX) {
+            let x = busX[key];
+            let isInv = key.includes("'");
+            svg += `<text x="${x}" y="55" text-anchor="middle" font-weight="bold" font-size="18">${key}</text>`;
+            svg += `<line x1="${x}" y1="70" x2="${x}" y2="1150" stroke="#95a5a6" stroke-width="2"/>`;
+            if (isInv) {
+                let srcX = busX[key.replace("'", "")];
+                svg += `<circle cx="${srcX}" cy="90" r="6" fill="#34495e"/>`; 
+                svg += `<line x1="${srcX}" y1="90" x2="${x}" y2="90" stroke="#95a5a6" stroke-width="2"/>`;
+                svg += `<use href="#not-gate" x="${x-20}" y="90" transform="rotate(90, ${x}, 110)"/>`;
+            }
+        }
+
+        const ffX = 1250; 
+        
+        let ffYs = [];
+        if(numFF === 1) ffYs = [400];
+        else if(numFF === 2) ffYs = [200, 700];
+        else if(numFF === 3) ffYs = [150, 480, 800];
+
+        for(let i=0; i<numFF; i++) {
+            let y = ffYs[i];
+            let label = numFF===1 ? "FF Q0" : (numFF===2 ? `FF Q${1-i}` : `FF Q${2-i}`);
+            let pinsHTML = '';
+            if (ffType === 'jk') {
+                pinsHTML += `<text x="${ffX+15}" y="${y+55}" font-size="18" font-weight="bold">J</text>`;
+                pinsHTML += `<text x="${ffX+15}" y="${y+155}" font-size="18" font-weight="bold">K</text>`;
+                pinsHTML += `<text x="${ffX+20}" y="${y+104}" font-size="14">CLK</text>`;
+                pinsHTML += `<path d="M ${ffX} ${y+90} L ${ffX+15} ${y+100} L ${ffX} ${y+110} Z" fill="none" stroke="#2c3e50" stroke-width="2"/>`;
+            } else {
+                let pinLabel = ffType === 't' ? 'T' : 'D';
+                pinsHTML += `<text x="${ffX+15}" y="${y+55}" font-size="18" font-weight="bold">${pinLabel}</text>`;
+                pinsHTML += `<text x="${ffX+20}" y="${y+154}" font-size="14">CLK</text>`;
+                pinsHTML += `<path d="M ${ffX} ${y+140} L ${ffX+15} ${y+150} L ${ffX} ${y+160} Z" fill="none" stroke="#2c3e50" stroke-width="2"/>`;
+            }
+
+            svg += `
+            <rect x="${ffX}" y="${y}" width="100" height="200" fill="#fcfdfe" stroke="#2980b9" stroke-width="3" rx="6"/>
+            <text x="${ffX+50}" y="${y+30}" text-anchor="middle" font-weight="bold" font-size="18" fill="#2980b9">${label}</text>
+            <text x="${ffX+50}" y="${y+185}" text-anchor="middle" font-size="14" fill="#7f8c8d">${ffType.toUpperCase()}-FF</text>
+            ${pinsHTML}
+            <text x="${ffX+80}" y="${y+55}" font-size="18" font-weight="bold">Q</text>
+            <text x="${ffX+80}" y="${y+155}" font-size="18" font-weight="bold">Q'</text>`;
+
+            let qVar = label.split(' ')[1];
+            let topTrackY = 10 + i * 15; 
+            svg += `<path d="M ${ffX+100} ${y+50} L ${ffX+160 + i*25} ${y+50} L ${ffX+160 + i*25} ${topTrackY} L ${busX[qVar]} ${topTrackY} L ${busX[qVar]} 70" fill="none" stroke="#27ae60" stroke-width="2.5"/>`;
+            svg += `<circle cx="${busX[qVar]}" cy="70" r="6" fill="#27ae60"/>`;
+        }
+
+        svg += `<text x="10" y="1115" font-weight="bold" fill="#e67e22" font-size="20">CLK</text>`;
+        svg += `<line x1="10" y1="1120" x2="${ffX-30}" y2="1120" stroke="#e67e22" stroke-width="2.5" stroke-dasharray="8,8"/>`;
+        svg += `<line x1="${ffX-30}" y1="1120" x2="${ffX-30}" y2="${ffYs[0] + (ffType==='jk'?100:150)}" stroke="#e67e22" stroke-width="2.5" stroke-dasharray="8,8"/>`;
+        for(let y of ffYs) {
+            let clkY = y + (ffType==='jk' ? 100 : 150);
+            svg += `<line x1="${ffX-30}" y1="${clkY}" x2="${ffX}" y2="${clkY}" stroke="#e67e22" stroke-width="2.5"/>`;
+        }
+
+        function getPortY(gateY, index, total) {
+            if (total === 1) return gateY + 30;
+            if (total === 2) return gateY + 15 + (index * 30); 
+            if (total === 3) return gateY + 12 + (index * 18); 
+            return gateY + 30;
+        }
+
+        function routeLogic(eq, pinName, destX, destY, isOutput=false) {
+            if(eq === "0" || eq === "1") {
+                svg += `<rect x="${destX-90}" y="${destY-15}" width="50" height="30" fill="#ecf0f1" stroke="black" stroke-width="2"/>`;
+                svg += `<text x="${destX-65}" y="${destY+6}" text-anchor="middle" font-size="16" font-weight="bold">${eq==="1"?"VCC":"GND"}</text>`;
+                svg += `<line x1="${destX-40}" y1="${destY}" x2="${destX}" y2="${destY}" stroke="black" stroke-width="2.5"/>`;
+            } else {
+                let terms = eq.split(' + ');
+                if(terms.length === 1) {
+                    let factors = parseTermForSVG(terms[0], allVarNames);
+                    if(factors.length === 1) { 
+                        let bx = busX[factors[0]];
+                        svg += `<circle cx="${bx}" cy="${destY}" r="6" fill="#3498db"/>`; 
+                        svg += `<line x1="${bx}" y1="${destY}" x2="${destX}" y2="${destY}" stroke="#3498db" stroke-width="2.5"/>`;
+                    } else { 
+                        let andX = destX - 180;
+                        let andY = destY - 30; 
+                        svg += `<use href="#and-gate" x="${andX}" y="${andY}"/>`;
+                        svg += `<line x1="${andX+65}" y1="${destY}" x2="${destX}" y2="${destY}" stroke="#2c3e50" stroke-width="2.5"/>`;
+                        factors.forEach((f, i) => {
+                            let iy = getPortY(andY, i, factors.length);
+                            let bx = busX[f];
+                            svg += `<circle cx="${bx}" cy="${iy}" r="6" fill="#3498db"/>`; 
+                            svg += `<line x1="${bx}" y1="${iy}" x2="${andX}" y2="${iy}" stroke="#3498db" stroke-width="2.5"/>`;
+                        });
+                    }
+                } else { 
+                    let orX = destX - 140;
+                    let orY = destY - 30;
+                    svg += `<use href="#or-gate" x="${orX}" y="${orY}"/>`;
+                    svg += `<line x1="${orX+60}" y1="${destY}" x2="${destX}" y2="${destY}" stroke="#2c3e50" stroke-width="2.5"/>`;
+
+                    let spacing = 90; 
+                    let startY = destY - ((terms.length - 1) * spacing) / 2;
+                    let andX = orX - 180; 
+
+                    terms.forEach((term, tIdx) => {
+                        let factors = parseTermForSVG(term, allVarNames);
+                        let termTargetY = getPortY(orY, tIdx, terms.length); 
+                        let localY = startY + tIdx * spacing; 
+                        let dropX = orX - 15 - (tIdx * 12); 
+
+                        if(factors.length === 1) {
+                            let bx = busX[factors[0]];
+                            svg += `<circle cx="${bx}" cy="${localY}" r="6" fill="#3498db"/>`; 
+                            svg += `<line x1="${bx}" y1="${localY}" x2="${dropX}" y2="${localY}" stroke="#3498db" stroke-width="2.5"/>`;
+                            svg += `<path d="M ${dropX} ${localY} L ${dropX} ${termTargetY} L ${orX} ${termTargetY}" fill="none" stroke="#3498db" stroke-width="2.5"/>`;
+                        } else {
+                            let andY = localY - 30;
+                            svg += `<use href="#and-gate" x="${andX}" y="${andY}"/>`;
+                            svg += `<path d="M ${andX+65} ${localY} L ${dropX} ${localY} L ${dropX} ${termTargetY} L ${orX} ${termTargetY}" fill="none" stroke="#2c3e50" stroke-width="2.5"/>`;
+                            
+                            factors.forEach((f, fIdx) => {
+                                let iy = getPortY(andY, fIdx, factors.length);
+                                let bx = busX[f];
+                                svg += `<circle cx="${bx}" cy="${iy}" r="6" fill="#3498db"/>`; 
+                                svg += `<line x1="${bx}" y1="${iy}" x2="${andX}" y2="${iy}" stroke="#3498db" stroke-width="2.5"/>`;
+                            });
+                        }
+                    });
+                }
+            }
+            if(isOutput) svg += `<text x="${destX + 20}" y="${destY + 8}" font-weight="bold" font-size="24" fill="#c0392b">${pinName} = ${eq}</text>`;
+        }
+
+        for(let i=0; i<numFF; i++) {
+            let y = ffYs[i];
+            let qVar = numFF===1 ? 0 : (numFF===2 ? 1-i : 2-i);
+            if(ffType === 'jk') {
+                routeLogic(equations[`J${qVar}`], `J${qVar}`, ffX, y+50); 
+                routeLogic(equations[`K${qVar}`], `K${qVar}`, ffX, y+150);
+            } else if (ffType === 't') {
+                routeLogic(equations[`T${qVar}`], `T${qVar}`, ffX, y+50);
+            } else {
+                routeLogic(equations[`D${qVar}`], `D${qVar}`, ffX, y+50);
+            }
+        }
+
+        routeLogic(equations['Output'], outputName, ffX + 160, ffYs[ffYs.length-1] + 280, true);
+        return svg;
+    }
+
+    function calculate() {
+        const modelType = document.querySelector('input[name="modelType"]:checked').value;
+        const ffType = document.getElementById('ffType').value;
+        const stateCount = parseInt(document.getElementById('stateCount').value);
+        const inputVar = document.getElementById('inputVar').value || 'X';
+        const outputVar = document.getElementById('outputVar').value || 'Z';
+        
+        const numFF = Math.ceil(Math.log2(stateCount));
+        
+        let allVarNames = [];
+        if(numFF===1) allVarNames = ['Q0'];
+        else if(numFF===2) allVarNames = ['Q1', 'Q0'];
+        else if(numFF===3) allVarNames = ['Q2', 'Q1', 'Q0'];
+        
+        let outVarNames = modelType === 'moore' ? [...allVarNames] : [...allVarNames, inputVar];
+        allVarNames.push(inputVar); 
+
+        let data = {};
+        for(let i=0; i<numFF; i++) {
+            if(ffType==='jk') { data[`J${i}`]=[]; data[`K${i}`]=[]; }
+            else if(ffType==='t') data[`T${i}`]=[];
+            else data[`D${i}`]=[];
+        }
+        data['Out'] = [];
+        
+        let nextQ_0 = [], nextQ_1 = [], out_0 = [], out_1 = [];
+
+        for (let i = 0; i < stateCount; i++) {
+            let n0 = stateToIndex(document.getElementById(`ns_${i}_0`).value);
+            let n1 = stateToIndex(document.getElementById(`ns_${i}_1`).value);
+            nextQ_0.push(n0); nextQ_1.push(n1);
+
+            if(modelType === 'mealy') {
+                out_0.push(parseInt(document.getElementById(`out_${i}_0`).value) || 0);
+                out_1.push(parseInt(document.getElementById(`out_${i}_1`).value) || 0);
+            } else {
+                let v = parseInt(document.getElementById(`out_${i}`).value) || 0;
+                out_0.push(v); out_1.push(v);
+            }
+        }
+
+        for(let i=0; i<Math.pow(2, numFF); i++) {
+            for(let x=0; x<=1; x++) {
+                if(i >= stateCount) {
+                    for(let k=0; k<numFF; k++) {
+                        if(ffType==='jk') { data[`J${k}`].push('X'); data[`K${k}`].push('X'); }
+                        else if(ffType==='t') data[`T${k}`].push('X');
+                        else data[`D${k}`].push('X');
+                    }
+                    if(modelType === 'mealy') data['Out'].push('X');
+                } else {
+                    let n_state = x===0 ? nextQ_0[i] : nextQ_1[i];
+                    for(let k=0; k<numFF; k++) {
+                        let q = (i & (1 << k)) ? 1 : 0;
+                        let n_q = n_state === -1 ? -1 : ((n_state & (1 << k)) ? 1 : 0);
+                        if(ffType==='jk') { data[`J${k}`].push(getJ(q, n_q)); data[`K${k}`].push(getK(q, n_q)); }
+                        else if(ffType==='t') data[`T${k}`].push(getT(q, n_q));
+                        else data[`D${k}`].push(getD(q, n_q));
+                    }
+                    if(modelType === 'mealy') data['Out'].push(x===0 ? out_0[i] : out_1[i]);
+                }
+            }
+        }
+
+        if(modelType === 'moore') {
+            for(let i=0; i<Math.pow(2, numFF); i++) {
+                data['Out'].push(i >= stateCount ? 'X' : out_0[i]);
+            }
+        }
+
+        let simplifiedEqs = {};
+        let kmapHTML = "";
+
+        const addLogic = (title, vals, vNames) => {
+            let res = generateTruthTableCard(title, vals, vNames);
+            simplifiedEqs[title] = res.eq;
+            kmapHTML += res.html;
+        };
+
+        for(let i=numFF-1; i>=0; i--) {
+            if (ffType === 'jk') { addLogic(`J${i}`, data[`J${i}`], allVarNames); addLogic(`K${i}`, data[`K${i}`], allVarNames); }
+            else if (ffType === 't') addLogic(`T${i}`, data[`T${i}`], allVarNames);
+            else addLogic(`D${i}`, data[`D${i}`], allVarNames);
+        }
+        addLogic('Output', data['Out'], outVarNames);
+
+        document.getElementById('kmap-container').innerHTML = kmapHTML;
+        document.getElementById('stateDiagramSvg').innerHTML = drawDynamicStateDiagram(stateCount, numFF, nextQ_0, nextQ_1, out_0, out_1, inputVar, modelType==='moore');
+        document.getElementById('circuitSvg').innerHTML = drawDynamicCircuit(simplifiedEqs, ffType, inputVar, outputVar, numFF, allVarNames);
+        
+        document.getElementById('result-section').style.display = 'block';
+    }
+
+</script>
+</body>
+</html>
